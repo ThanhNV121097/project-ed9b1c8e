@@ -81,7 +81,7 @@ func greetingHandler(pool *pgxpool.Pool) http.HandlerFunc {
 
 		var text string
 		err := pool.QueryRow(ctx, "select text from greetings where id = $1", 1).Scan(&text)
-		if errors.Is(err, db.ErrNoRows) {
+		if db.IsNoRows(err) {
 			writeError(w, http.StatusNotFound, "not_found", "Greeting not found")
 			return
 		}
