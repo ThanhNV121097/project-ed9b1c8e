@@ -30,6 +30,7 @@ Common errors:
 |---|---|---|---|
 | `404` | `not_found` | `Greeting not found` | Greeting row missing. |
 | `500` | `internal_error` | `Request failed` | Database or unexpected server failure. |
+| `503` | `service_unavailable` | `Service unavailable` | Health check dependency unavailable. |
 
 ## Endpoints
 
@@ -38,6 +39,8 @@ Common errors:
 `GET /healthz`
 
 Purpose: container and runtime health probe.
+
+Auth: none.
 
 Request body: none.
 
@@ -69,13 +72,19 @@ Rules:
 
 Purpose: frontend reads stored greeting value.
 
+Auth: none. Public by SRS.
+
 Request body: none.
+
+Query parameters: none. Ignore query string.
 
 Success response: HTTP `200`:
 
 ```json
 {
-  "text": "Hello Word"
+  "greeting": {
+    "text": "Hello Word"
+  }
 }
 ```
 
@@ -83,14 +92,33 @@ Response fields:
 
 | Field | Type | Notes |
 |---|---|---|
-| `text` | string | Stored greeting text, rendered exactly by frontend. |
+| `greeting` | object | Wrapper matching reviewed UI mock module. |
+| `greeting.text` | string | Stored greeting text, rendered exactly by frontend. |
+
+Reviewed UI mock contract:
+
+```ts
+{
+  greeting: {
+    text: "Hello Word",
+  },
+}
+```
 
 Errors:
 
-| HTTP | Code | Message |
-|---|---|---|
-| `404` | `not_found` | `Greeting not found` |
-| `500` | `internal_error` | `Request failed` |
+| HTTP | Code | Message | When |
+|---|---|---|---|
+| `404` | `not_found` | `Greeting not found` | Row `greetings.id = 1` missing. |
+| `500` | `internal_error` | `Request failed` | Database or unexpected server failure. |
+
+Rules:
+
+- Read only row `greetings.id = 1`.
+- Use parameterized SQL even for fixed row query.
+- Use request context for database call.
+- Do not trim, transform, localize, or substitute `greeting.text`.
+- Do not add loading, empty, or error UI states in backend contract; errors use envelope only.
 
 ## Security and reliability
 
