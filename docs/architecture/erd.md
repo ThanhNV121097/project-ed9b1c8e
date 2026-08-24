@@ -27,6 +27,24 @@ Seed data:
 insert into greetings (id, text) values (1, 'Hello Word');
 ```
 
+Queries served:
+
+- `GET /v1/greeting` reads row `id = 1` through `greetings_pkey`; no extra index needed.
+
+## Story extension — Centered Hello Word page
+
+No new entities. Existing `greetings` table satisfies reviewed UI mock contract:
+
+```ts
+{
+  greeting: {
+    text: "Hello Word",
+  },
+}
+```
+
+Backend API reads `greetings.text` for row `id = 1` and returns it as `greeting.text`.
+
 ## Migration bookkeeping
 
 ### `schema_migrations`
@@ -41,6 +59,25 @@ Created by backend migrator before applying migrations.
 ## Relationships
 
 No foreign keys. `greetings` is standalone.
+
+## Migration plan
+
+Forward:
+
+1. Create `schema_migrations` if missing.
+2. Create `greetings` with columns, constraints, and primary key listed above.
+3. Seed row `(1, 'Hello Word')` if missing.
+
+Backward:
+
+1. Drop `greetings`.
+2. Keep `schema_migrations` unless full database reset is requested.
+
+Safety on populated tables:
+
+- Safe for empty database.
+- Safe for populated database when row `id = 1` is absent or already contains approved value.
+- Not safe to overwrite changed greeting text; backend migration must not replace existing row text.
 
 ## Notes
 
