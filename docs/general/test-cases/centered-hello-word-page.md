@@ -1,87 +1,59 @@
-# Test Cases — Centered Hello Word page
+# Test cases — Centered Hello Word page
 
-Risk level: low. Single public page, one read-only API, one stored row. Cases cover render, contract, failure, and visual criteria.
+Risk level: low. Single public landing page, no auth, one read-only value, plain rendering.
 
-## Scenario 1: Stored greeting renders centered on page
-**Given** PostgreSQL has one greeting row with text `Hello Word`, backend API returns that stored value, and page is opened as guest
-**When** guest loads page
-**Then** browser displays only `Hello Word` centered horizontally and vertically on plain white background, with black text, no extra chrome, and no animation
-**Requirement** GENERAL-001, AC-1, AC-3, screen default, NFR Accessibility, NFR Responsive
-**Check**: render_url; measure_styles
+## Cases
 
-## Scenario 2: Frontend does not hardcode greeting text
-**Given** backend API returns stored greeting and frontend bundle/source is available for inspection
-**When** guest inspects rendered page source or network response
-**Then** greeting text appears only from backend response, not as static frontend page copy
-**Requirement** GENERAL-001, AC-2
-**Check**: fetch_url; render_url
-
-## Scenario 3: Public guest access has no permission gate
-**Given** public page is open as guest and no authentication is configured for module
-**When** guest loads page
-**Then** page is accessible without login or other permission prompt
-**Requirement** GENERAL-001, Not permitted
+**Scenario**: Show stored greeting on centered page
+**Given**: PostgreSQL greeting row exists with text `Hello Word`, and backend `/v1/greeting` returns that stored value
+**When**: Guest opens landing page
+**Then**: Page displays exactly `Hello Word`, centered horizontally and vertically on single screen
 **Check**: render_url
 
-## Scenario 4: Empty stored greeting does not render empty text
-**Given** stored greeting row exists with empty text and backend returns that value
-**When** guest loads page
-**Then** empty greeting is not rendered as visible page text
-**Requirement** GENERAL-001, Invalid input
+**Scenario**: Greeting is not hardcoded in frontend page copy
+**Given**: Backend returns stored greeting value, and frontend page source is inspected after load
+**When**: Guest inspects rendered page source or network response
+**Then**: Frontend page copy does not contain hardcoded greeting text; displayed text comes from backend response
+**Check**: fetch_url
+
+**Scenario**: Plain white background, black text, no extra chrome or animation
+**Given**: Approved design loaded and page rendered with stored greeting
+**When**: Guest views landing page
+**Then**: Computed background is `#FFFFFF`, computed text color is `#000000`, and no extra chrome or animation is present
+**Check**: measure_styles
+
+**Scenario**: Empty stored greeting does not render empty message
+**Given**: Greeting row exists with empty text
+**When**: Guest opens landing page
+**Then**: Empty greeting is not rendered as visible page content
 **Check**: render_url
 
-## Scenario 5: Short plain greeting stays unchanged on one line
-**Given** stored greeting row exists with short plain string `Hello Word` and backend returns it
-**When** guest loads page at 320px width
-**Then** visible text matches stored value exactly and stays on single centered text line without horizontal scroll
-**Requirement** GENERAL-001, Boundary, NFR Responsive, NFR Localization
-**Check**: render_url; measure_styles
+**Scenario**: Short plain greeting renders unchanged within centered text line
+**Given**: Greeting row exists with short plain string `Hi`
+**When**: Guest opens landing page
+**Then**: Page displays `Hi` unchanged in same centered text region
+**Check**: render_url
 
-## Scenario 6: Missing greeting row yields no approved-design error state
-**Given** greeting row is missing and backend returns 404 `not_found` with message `Greeting not found`
-**When** guest loads page
-**Then** page shows no loading, empty, or error state in approved design
-**Requirement** GENERAL-001, Not found
-**Check**: fetch_url; render_url
+**Scenario**: Missing greeting row shows no loading, empty, or error state in approved design
+**Given**: Greeting row is missing
+**When**: Guest opens landing page
+**Then**: Page does not show loading copy, empty state copy, or error state copy from approved design
+**Check**: render_url
 
-## Scenario 7: Backend or database failure yields no approved-design error state
-**Given** backend or database is unavailable and request fails with 500 `internal_error` and message `Request failed`
-**When** guest loads page
-**Then** page shows no loading, empty, or error state in approved design
-**Requirement** GENERAL-001, Upstream failure
-**Check**: fetch_url; render_url
-
-## Scenario 8: Service contract success shape for greeting API
-**Given** backend has stored greeting row with text `Hello Word`
-**When** guest sends `GET /v1/greeting`
-**Then** response is HTTP 200 with JSON body `{ "text": "Hello Word" }`
-**Requirement** services.md Read greeting success response
+**Scenario**: Guest has no permission gate
+**Given**: Guest is unauthenticated
+**When**: Guest opens landing page
+**Then**: Page remains public and loads without auth prompt or redirect
 **Check**: fetch_url
 
-## Scenario 9: Service contract 404 for missing greeting row
-**Given** greeting row is missing
-**When** guest sends `GET /v1/greeting`
-**Then** response is HTTP 404 with error envelope `{ "error": { "code": "not_found", "message": "Greeting not found" } }`
-**Requirement** services.md Read greeting errors
-**Check**: fetch_url
+**Scenario**: Latest committed greeting value shows after row changes during read
+**Given**: Greeting row changes from one value to another before refresh
+**When**: Guest reloads page after change is committed
+**Then**: Page shows latest committed stored value
+**Check**: render_url
 
-## Scenario 10: Service contract 500 for database or unexpected failure
-**Given** database or backend fails while handling greeting request
-**When** guest sends `GET /v1/greeting`
-**Then** response is HTTP 500 with error envelope `{ "error": { "code": "internal_error", "message": "Request failed" } }`
-**Requirement** services.md Error envelope, common errors
-**Check**: fetch_url
-
-## Scenario 11: Health check returns ok only when PostgreSQL works
-**Given** migrations succeeded and `SELECT 1` against PostgreSQL succeeds
-**When** guest sends `GET /healthz`
-**Then** response is HTTP 200 with plain text body `ok`
-**Requirement** services.md Health check success
-**Check**: fetch_url
-
-## Scenario 12: Health check fails with service unavailable when runtime or DB is not ready
-**Given** migrations not succeeded or `SELECT 1` against PostgreSQL fails
-**When** guest sends `GET /healthz`
-**Then** response is HTTP 503 with error envelope `{ "error": { "code": "service_unavailable", "message": "Service unavailable" } }`
-**Requirement** services.md Health check failure
-**Check**: fetch_url
+**Scenario**: Backend or database unavailable shows no loading, empty, or error state in approved design
+**Given**: Backend API or PostgreSQL is unavailable
+**When**: Guest opens landing page
+**Then**: Page does not render loading, empty, or error state from approved design
+**Check**: render_url
