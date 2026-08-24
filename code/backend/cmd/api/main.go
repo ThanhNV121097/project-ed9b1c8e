@@ -91,7 +91,9 @@ func greetingHandler(pool *pgxpool.Pool) http.HandlerFunc {
 			return
 		}
 
-		writeJSON(w, http.StatusOK, map[string]string{"text": text})
+		writeJSON(w, http.StatusOK, map[string]map[string]string{
+			"greeting": {"text": text},
+		})
 	}
 }
 

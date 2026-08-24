@@ -1,3 +1,5 @@
+import CenteredHelloWordPage from "../components/CenteredHelloWordPage";
+
 export default function Page() {
-  return <main>{/* Story components mount here. */}</main>;
+  return <CenteredHelloWordPage />;
 }
